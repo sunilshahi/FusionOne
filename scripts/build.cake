@@ -16,8 +16,8 @@ var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 
 
-var dacpac = File("./src/FusionOne.Database/bin/" + configuration + "/FusionOne.Database.dacpac");
-var publishProfile = File("./src/FusionOne.Database/Publish/FusionOne.Database.publish.xml");
+var dacpac = File("./../src/FusionOne.Database/bin/" + configuration + "/FusionOne.Database.dacpac");
+var publishProfile = File("./../src/FusionOne.Database/PublishProfile/FusionOne.Database.publish.xml");
 
 ////////////////////////////////////
 // SETUP/TEAR DOWN
@@ -39,7 +39,7 @@ Teardown(context =>
 Task("Build")
 	.Does(() =>
 	{
-        MSBuild("./src/FusionOne.sln", settings =>
+        MSBuild("./../src/FusionOne.sln", settings =>
             settings.UseToolVersion(MSBuildToolVersion.VS2017)
 				.SetPlatformTarget(PlatformTarget.MSIL)
                 .WithProperty("TreatWarningsAsErrors","true")
@@ -54,13 +54,13 @@ Task("DeploymentReport")
     .IsDependentOn("Build")
     .Does(() =>
     {
-        EnsureDirectoryExists("./scripts");
+        EnsureDirectoryExists("./../publish/scripts");
 
         SqlPackageDeployReport(settings => 
         {
             settings.SourceFile = dacpac;
             settings.Profile = publishProfile;
-            settings.OutputPath = File("./scripts/DeploymentReport.txt");
+            settings.OutputPath = File("./../publish/scripts/DeploymentReport.txt");
         }); 
 
         Information("DeploymentReport generation completed.");
@@ -71,13 +71,13 @@ Task("Script")
     .IsDependentOn("DeploymentReport")
     .Does(() =>
     {
-        EnsureDirectoryExists("./scripts");
+        EnsureDirectoryExists("./../publish/scripts");
 
         SqlPackageScript(settings => 
         {
             settings.SourceFile = dacpac;
             settings.Profile = publishProfile;
-            settings.OutputPath = File("./scripts/FusionOne.sql");
+            settings.OutputPath = File("./../publish/scripts/FusionOne.sql");
         });
 
         Information("Script generation completed.");
