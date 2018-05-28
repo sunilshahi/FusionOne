@@ -59,12 +59,13 @@
     <Folder Include="Properties" />
     <Folder Include="Schema" />
     <Folder Include="Schema\dbo" />
-    <Folder Include="Publish" />
+    <Folder Include="PublishProfile\" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="Schema\dbo\SampleTable.sql" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Publish\FusionOne.Database.publish.xml" />
+    <None Include="PublishProfile\FusionOne.Database.production.publish.xml" />
+    <None Include="PublishProfile\FusionOne.Database.publish.xml" />
   </ItemGroup>
 </Project>

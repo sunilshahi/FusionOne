@@ -1,22 +1,23 @@
 ////////////////////////////////////
 // INSTALL TOOLS
 ////////////////////////////////////
-#tool "nuget:https://www.nuget.org/api/v2?package=Microsoft.Data.Tools.Msbuild&version=10.0.61026"
+#tool nuget:?package=Microsoft.Data.Tools.Msbuild
 
 ////////////////////////////////////
 // INSTALL ADDINS
 ////////////////////////////////////
-#addin "nuget:https://www.myget.org/F/cake-sqlpackage/api/v2?package=Cake.SqlPackage&version=0.2.0-alpha0008"
-
+#addin nuget:?package=Cake.SqlPackage
 
 ////////////////////////////////////
 // SETUP ARGUMENTS
 ////////////////////////////////////
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
+var connection = Argument("connection", "Server=.;Database=FusionOne;Trusted_Connection=True;");
 
 
 var dacpac = File("./../src/FusionOne.Database/bin/" + configuration + "/FusionOne.Database.dacpac");
+var bacpac = File("./../publish/export/FusionOne.bacpac");
 var publishProfile = File("./../src/FusionOne.Database/PublishProfile/FusionOne.Database.publish.xml");
 
 ////////////////////////////////////
@@ -83,8 +84,75 @@ Task("Script")
         Information("Script generation completed.");
     });
 
+Task("Publish")
+	.IsDependentOn("Build")
+    .Does(() =>
+    {
+        SqlPackagePublish(settings => 
+        {
+            settings.SourceFile = dacpac;
+            settings.Profile = publishProfile;
+        });
+
+        Information("Publish completed.");
+    });
+
+
+Task("Export")
+    .Does(() =>
+    {
+        EnsureDirectoryExists("./../publish/export");
+        CleanDirectories(new List<string> {"./../publish/export"});
+
+        SqlPackageExport(settings =>
+        {
+            settings.SourceConnectionString = connection;
+            settings.Profile = publishProfile;
+            settings.TargetFile = bacpac;
+        });
+
+        Information("Export completed.");
+    });
+
+Task("ProdPackage")
+    .IsDependentOn("Build")
+    .Does(() => {
+        EnsureDirectoryExists("./../publish/export/bin");
+        
+        CleanDirectories(new List<string> {"./../publish/export"});
+
+        CopyDirectory("./../src/FusionOne.Database/bin", "./../publish/export/bin");
+        CopyFile("./deploy.cake", "./../publish/export/build.cake");
+        CopyFile("./deploy.setup.ps1", "./../publish/export/setup.ps1");
+
+        try{
+            DownloadFile("https://cakebuild.net/download/bootstrapper/windows", "./../publish/export/build.ps1");
+        }
+        finally{
+            //do nothing there is setup.ps1 file to help
+        }
+         
+        CopyFile("./../src/FusionOne.Database/PublishProfile/FusionOne.Database.production.publish.xml"
+               , "./../publish/export/FusionOne.Database.publish.xml"); 
+        
+        Zip("./../publish/export/", "./../publish/prodpackage.zip");
+
+        Information("Prod Package generation completed.");       
+    });
+
+Task("Import")
+    .Does(() =>
+    {
+        SqlPackageImport(settings => 
+        {
+            settings.SourceFile = bacpac;
+            settings.TargetConnectionString = connection;
+        });
+
+        Information("Import completed.");        
+    });
 
 Task("Default")
-  .IsDependentOn("Script");
+  .IsDependentOn("Publish");
 
 RunTarget(target);
