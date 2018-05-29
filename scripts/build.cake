@@ -9,14 +9,19 @@
 #addin nuget:?package=Cake.SqlPackage
 
 ////////////////////////////////////
+// INSTALL MODULES
+////////////////////////////////////
+#module nuget:?package=Cake.LongPath.Module
+
+////////////////////////////////////
 // SETUP ARGUMENTS
 ////////////////////////////////////
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 var connection = Argument("connection", "Server=.;Database=FusionOne;Trusted_Connection=True;");
+var environment = Argument("environment", "production");
 
-
-var dacpac = File("./../src/FusionOne.Database/bin/" + configuration + "/FusionOne.Database.dacpac");
+var dacpac = File($"./../src/FusionOne.Database/bin/{configuration}/FusionOne.Database.dacpac");
 var bacpac = File("./../publish/export/FusionOne.bacpac");
 var publishProfile = File("./../src/FusionOne.Database/PublishProfile/FusionOne.Database.publish.xml");
 
@@ -25,6 +30,17 @@ var publishProfile = File("./../src/FusionOne.Database/PublishProfile/FusionOne.
 ////////////////////////////////////
 Setup(context =>
 {
+    var fileSystemType = Context.FileSystem.GetType();
+
+    if (fileSystemType.ToString()=="Cake.LongPath.Module.LongPathFileSystem")
+    {
+        Information($"Sucessfully loaded {fileSystemType.Assembly.Location}");
+    }
+    else
+    {
+        Error("Failed to load Cake.LongPath.Module");
+    }
+
 	Information("Target Cake Task: {0}", target);
 });
 
@@ -61,7 +77,7 @@ Task("DeploymentReport")
         {
             settings.SourceFile = dacpac;
             settings.Profile = publishProfile;
-            settings.OutputPath = File("./../publish/scripts/DeploymentReport.txt");
+            settings.OutputPath = File("./../publish/scripts/DeploymentReport.xml");
         }); 
 
         Information("DeploymentReport generation completed.");
@@ -114,32 +130,6 @@ Task("Export")
         Information("Export completed.");
     });
 
-Task("ProdPackage")
-    .IsDependentOn("Build")
-    .Does(() => {
-        EnsureDirectoryExists("./../publish/export/bin");
-        
-        CleanDirectories(new List<string> {"./../publish/export"});
-
-        CopyDirectory("./../src/FusionOne.Database/bin", "./../publish/export/bin");
-        CopyFile("./deploy.cake", "./../publish/export/build.cake");
-        CopyFile("./deploy.setup.ps1", "./../publish/export/setup.ps1");
-
-        try{
-            DownloadFile("https://cakebuild.net/download/bootstrapper/windows", "./../publish/export/build.ps1");
-        }
-        finally{
-            //do nothing there is setup.ps1 file to help
-        }
-         
-        CopyFile("./../src/FusionOne.Database/PublishProfile/FusionOne.Database.production.publish.xml"
-               , "./../publish/export/FusionOne.Database.publish.xml"); 
-        
-        Zip("./../publish/export/", "./../publish/prodpackage.zip");
-
-        Information("Prod Package generation completed.");       
-    });
-
 Task("Import")
     .Does(() =>
     {
@@ -150,6 +140,49 @@ Task("Import")
         });
 
         Information("Import completed.");        
+    });
+
+Task("Package")
+    .IsDependentOn("Build")
+    .Does(() => {
+
+        EnsureDirectoryExists("./../publish");
+        CleanDirectories(new List<string> {"./../publish"});
+        
+        CopyDirectory("./../src/FusionOne.Database/bin", "./../publish/bin");
+
+        EnsureDirectoryExists("./../publish/PublishProfile");
+        CopyDirectory($"./../src/FusionOne.Database/PublishProfile", "./../publish/PublishProfile");
+
+
+        EnsureDirectoryExists("./../package");
+        CopyDirectory($"./../scripts", "./../package/scripts"); 
+        CopyDirectory($"./../publish", "./../package/publish"); 
+
+        Zip("./../package/", "./../publish/package.zip"); 
+
+        DeleteDirectory("./../package/", new DeleteDirectorySettings {
+            Recursive = true,
+            Force = true
+        });
+
+        Information("Publish Package generation completed.");       
+    });
+
+Task("Deploy")
+    .Does(() =>
+    {
+        var localDacpac = File($"./../publish/bin/{configuration}/FusionOne.Database.dacpac");
+        var localPublishProfile = 
+            File($"./../publish/PublishProfile/FusionOne.Database.{environment}.publish.xml");
+
+        SqlPackagePublish(settings => 
+        {
+            settings.SourceFile = localDacpac;
+            settings.Profile = localPublishProfile;
+        });
+
+        Information("Deploy completed.");
     });
 
 Task("Default")
