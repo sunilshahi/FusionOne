@@ -30,6 +30,8 @@ var publishProfile = File("./../src/FusionOne.Database/PublishProfile/FusionOne.
 ////////////////////////////////////
 Setup(context =>
 {
+    Information("Running pre build check.");
+
     var fileSystemType = Context.FileSystem.GetType();
 
     if (fileSystemType.ToString()=="Cake.LongPath.Module.LongPathFileSystem")
@@ -41,7 +43,7 @@ Setup(context =>
         Error("Failed to load Cake.LongPath.Module");
     }
 
-	Information("Target Cake Task: {0}", target);
+	Information($"Target Cake Task: {target}");
 });
 
 Teardown(context => 
@@ -56,7 +58,7 @@ Teardown(context =>
 Task("Build")
 	.Does(() =>
 	{
-        MSBuild("./../src/FusionOne.sln", settings =>
+        MSBuild("./../FusionOne.sln", settings =>
             settings.UseToolVersion(MSBuildToolVersion.VS2017)
 				.SetPlatformTarget(PlatformTarget.MSIL)
                 .WithProperty("TreatWarningsAsErrors","true")
