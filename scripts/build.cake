@@ -7,6 +7,7 @@
 // INSTALL ADDINS
 ////////////////////////////////////
 #addin nuget:?package=Cake.SqlPackage
+//#addin nuget:?package=Cake.ArgumentHelpers
 
 ////////////////////////////////////
 // INSTALL MODULES
@@ -19,11 +20,15 @@
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 var connection = Argument("connection", "Server=.;Database=FusionOne;Trusted_Connection=True;");
-var environment = Argument("environment", "production");
+var environment = ArgumentOrEnvironmentVariable("environment", "plexosoft_", "local");
 
 var dacpac = File($"./../src/FusionOne.Database/bin/{configuration}/FusionOne.Database.dacpac");
 var bacpac = File("./../publish/export/FusionOne.bacpac");
-var publishProfile = File("./../src/FusionOne.Database/PublishProfile/FusionOne.Database.publish.xml");
+
+var environmentQualifier =  (environment == "local") ? string.Empty : $".{environment}";
+
+var publishProfile = File(
+    $"./../src/FusionOne.Database/PublishProfile/FusionOne.Database{environmentQualifier}.publish.xml");
 
 ////////////////////////////////////
 // SETUP/TEAR DOWN
@@ -69,8 +74,16 @@ Task("Build")
         Information("Build completed.");
 	});
 
+Task("CleanUp")
+    .Does(() =>
+    {
+        EnsureDirectoryExists("./../publish");
+        CleanDirectories(new List<string> {"./../publish"});
+    });
+
 Task("DeploymentReport")
     .IsDependentOn("Build")
+    .IsDependentOn("CleanUp")
     .Does(() =>
     {
         EnsureDirectoryExists("./../publish/scripts");
@@ -85,9 +98,7 @@ Task("DeploymentReport")
         Information("DeploymentReport generation completed.");
     });
 
-Task("Script")
-    .IsDependentOn("Build")
-    .IsDependentOn("DeploymentReport")
+Task("Script:Isolated")
     .Does(() =>
     {
         EnsureDirectoryExists("./../publish/scripts");
@@ -102,8 +113,12 @@ Task("Script")
         Information("Script generation completed.");
     });
 
-Task("Publish")
-	.IsDependentOn("Build")
+Task("Script")
+    .IsDependentOn("DeploymentReport")
+    .IsDependentOn("Script:Isolated");
+
+
+Task("Publish:Isolated")
     .Does(() =>
     {
         SqlPackagePublish(settings => 
@@ -115,8 +130,15 @@ Task("Publish")
         Information("Publish completed.");
     });
 
+Task("Deploy")
+    .IsDependentOn("Publish:Isolated");
+
+Task("Publish")
+	.IsDependentOn("Build")
+    .IsDependentOn("Publish:Isolated");
 
 Task("Export")
+    .IsDependentOn("CleanUp")
     .Does(() =>
     {
         EnsureDirectoryExists("./../publish/export");
@@ -125,7 +147,7 @@ Task("Export")
         SqlPackageExport(settings =>
         {
             settings.SourceConnectionString = connection;
-            settings.Profile = publishProfile;
+            //settings.Profile = publishProfile;
             settings.TargetFile = bacpac;
         });
 
@@ -146,22 +168,19 @@ Task("Import")
 
 Task("Package")
     .IsDependentOn("Build")
+    .IsDependentOn("CleanUp")
     .Does(() => {
 
-        EnsureDirectoryExists("./../publish");
-        CleanDirectories(new List<string> {"./../publish"});
-        
-        CopyDirectory("./../src/FusionOne.Database/bin", "./../publish/bin");
+        CopyDirectory("./../src/FusionOne.Database/bin", "./../publish/src/FusionOne.Database/bin");
+        CopyDirectory("./../src/FusionOne.Database/PublishProfile", "./../publish/src/FusionOne.Database/PublishProfile");
+        CopyDirectory("./", "./../publish/scripts"); 
 
-        EnsureDirectoryExists("./../publish/PublishProfile");
-        CopyDirectory($"./../src/FusionOne.Database/PublishProfile", "./../publish/PublishProfile");
-
+        CopyDirectory($"./../publish/src", "./../package/src"); 
 
         EnsureDirectoryExists("./../package");
-        CopyDirectory($"./../scripts", "./../package/scripts"); 
-        CopyDirectory($"./../publish", "./../package/publish"); 
+        Zip("./../publish/", "./../package/package.zip");
+        MoveFile("./../package/package.zip","./../publish/package.zip");
 
-        Zip("./../package/", "./../publish/package.zip"); 
 
         DeleteDirectory("./../package/", new DeleteDirectorySettings {
             Recursive = true,
@@ -171,23 +190,13 @@ Task("Package")
         Information("Publish Package generation completed.");       
     });
 
-Task("Deploy")
-    .Does(() =>
-    {
-        var localDacpac = File($"./../publish/bin/{configuration}/FusionOne.Database.dacpac");
-        var localPublishProfile = 
-            File($"./../publish/PublishProfile/FusionOne.Database.{environment}.publish.xml");
-
-        SqlPackagePublish(settings => 
-        {
-            settings.SourceFile = localDacpac;
-            settings.Profile = localPublishProfile;
-        });
-
-        Information("Deploy completed.");
-    });
-
 Task("Default")
   .IsDependentOn("Publish");
+
+
+public string ArgumentOrEnvironmentVariable(string name, string envPrefix, string defaultValue)
+{
+    return Argument<string>(name, EnvironmentVariable(envPrefix + name)) ?? defaultValue;
+}
 
 RunTarget(target);

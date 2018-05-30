@@ -5,6 +5,18 @@ VisualStudioVersion = 15.0.27703.2018
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "FusionOne.Database", "src\FusionOne.Database\FusionOne.Database.sqlproj", "{CBE0143E-B8F8-42C1-AEFA-B43435B2B5C1}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{B6775255-3727-4526-82BE-5A3DB9A6B903}"
+	ProjectSection(SolutionItems) = preProject
+		scripts\build.cake = scripts\build.cake
+		scripts\build.ps1 = scripts\build.ps1
+		scripts\build.sh = scripts\build.sh
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{52766749-9FFE-4D27-8054-436C43DADEE9}"
+	ProjectSection(SolutionItems) = preProject
+		scripts\tools\packages.config = scripts\tools\packages.config
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +32,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{52766749-9FFE-4D27-8054-436C43DADEE9} = {B6775255-3727-4526-82BE-5A3DB9A6B903}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8DD9D532-7644-4E99-929F-CA05A0427A41}
