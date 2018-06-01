@@ -19,14 +19,13 @@
 ////////////////////////////////////
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
-var connection = Argument("connection", "Server=.;Database=FusionOne;Trusted_Connection=True;");
+var connection = Argument("connection", "");
 var environment = ArgumentOrEnvironmentVariable("environment", "plexosoft_", "local");
 
 var dacpac = File($"./../src/FusionOne.Database/bin/{configuration}/FusionOne.Database.dacpac");
 var bacpac = File("./../publish/export/FusionOne.bacpac");
 
 var environmentQualifier =  (environment == "local") ? string.Empty : $".{environment}";
-
 var publishProfile = File(
     $"./../src/FusionOne.Database/PublishProfile/FusionOne.Database{environmentQualifier}.publish.xml");
 
@@ -77,6 +76,7 @@ Task("Build")
 Task("CleanUp")
     .Does(() =>
     {
+        Information("Cleaning up publish folder.");
         EnsureDirectoryExists("./../publish");
         CleanDirectories(new List<string> {"./../publish"});
     });
@@ -117,7 +117,6 @@ Task("Script")
     .IsDependentOn("DeploymentReport")
     .IsDependentOn("Script:Isolated");
 
-
 Task("Publish:Isolated")
     .Does(() =>
     {
@@ -133,12 +132,45 @@ Task("Publish:Isolated")
 Task("Deploy")
     .IsDependentOn("Publish:Isolated");
 
+Task("Deploy:Script")
+    .IsDependentOn("Script:Isolated");
+
 Task("Publish")
 	.IsDependentOn("Build")
     .IsDependentOn("Publish:Isolated");
 
+Task("SetConnectionString")
+    .WithCriteria(string.IsNullOrEmpty(connection))
+    .Does(() => 
+    {
+        Information("Getting connectionstring from publish profile because no connection string was passed.");
+
+        var xmlPeekSettings = new XmlPeekSettings {
+            Namespaces = new Dictionary<string, string> {
+                { "msbuild", "http://schemas.microsoft.com/developer/msbuild/2003" }
+            }
+        };
+
+        // this does not have database
+        var connectionString = XmlPeek(
+            publishProfile,
+            "/msbuild:Project/msbuild:PropertyGroup/msbuild:TargetConnectionString",
+            xmlPeekSettings
+        );
+
+        //get database name to add it to connection string.
+        var database = XmlPeek(
+            publishProfile,
+            "/msbuild:Project/msbuild:PropertyGroup/msbuild:TargetDatabaseName",
+            xmlPeekSettings
+        );
+
+        connection = $"{connectionString};database={database}";
+    });
+
 Task("Export")
     .IsDependentOn("CleanUp")
+    .IsDependentOn("SetConnectionString")
     .Does(() =>
     {
         EnsureDirectoryExists("./../publish/export");
@@ -147,7 +179,6 @@ Task("Export")
         SqlPackageExport(settings =>
         {
             settings.SourceConnectionString = connection;
-            //settings.Profile = publishProfile;
             settings.TargetFile = bacpac;
         });
 
@@ -155,6 +186,7 @@ Task("Export")
     });
 
 Task("Import")
+    .IsDependentOn("SetConnectionString")
     .Does(() =>
     {
         SqlPackageImport(settings => 
@@ -169,18 +201,19 @@ Task("Import")
 Task("Package")
     .IsDependentOn("Build")
     .IsDependentOn("CleanUp")
-    .Does(() => {
-
-        CopyDirectory("./../src/FusionOne.Database/bin", "./../publish/src/FusionOne.Database/bin");
-        CopyDirectory("./../src/FusionOne.Database/PublishProfile", "./../publish/src/FusionOne.Database/PublishProfile");
+    .Does(() => 
+    {
+        CopyDirectory("./../src/FusionOne.Database/bin", 
+            "./../publish/src/FusionOne.Database/bin");
+        CopyDirectory("./../src/FusionOne.Database/PublishProfile", 
+            "./../publish/src/FusionOne.Database/PublishProfile");
         CopyDirectory("./", "./../publish/scripts"); 
-
+        
         CopyDirectory($"./../publish/src", "./../package/src"); 
 
         EnsureDirectoryExists("./../package");
         Zip("./../publish/", "./../package/package.zip");
         MoveFile("./../package/package.zip","./../publish/package.zip");
-
 
         DeleteDirectory("./../package/", new DeleteDirectorySettings {
             Recursive = true,
@@ -191,7 +224,7 @@ Task("Package")
     });
 
 Task("Default")
-  .IsDependentOn("Publish");
+    .IsDependentOn("Publish");
 
 
 public string ArgumentOrEnvironmentVariable(string name, string envPrefix, string defaultValue)
