@@ -93,6 +93,9 @@ Task("DeploymentReport")
             settings.SourceFile = dacpac;
             settings.Profile = publishProfile;
             settings.OutputPath = File("./../publish/scripts/DeploymentReport.xml");
+            settings.Variables =  new Dictionary<string, string>{
+                {"Flag", "False"}
+            };
         }); 
 
         Information("DeploymentReport generation completed.");
@@ -108,6 +111,9 @@ Task("Script:Isolated")
             settings.SourceFile = dacpac;
             settings.Profile = publishProfile;
             settings.OutputPath = File("./../publish/scripts/FusionOne.sql");
+            settings.Variables =  new Dictionary<string, string>{
+                {"Flag", "False"}
+            };
         });
 
         Information("Script generation completed.");
