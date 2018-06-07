@@ -1,0 +1,5 @@
+﻿CREATE TABLE [Account].[AccountType]
+(
+	[Id] INT NOT NULL PRIMARY KEY IDENTITY, 
+    [TypeName] NVARCHAR(100) NOT NULL
+)

@@ -8,7 +8,7 @@
     <ProfileVersionNumber>1</ProfileVersionNumber>
   </PropertyGroup>
   <ItemGroup>
-    <SqlCmdVariable Include="Flag">
+    <SqlCmdVariable Include="Seed">
       <Value>False</Value>
     </SqlCmdVariable>
   </ItemGroup>
