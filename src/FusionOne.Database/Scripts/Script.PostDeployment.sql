@@ -38,20 +38,40 @@ Post-Deployment Script - START
 
 	/*
 	--------------------------------------------------------
-	3.PostDeployment.Updates.sql - START
+	3.PostDeployment.Seed.sql - START
 	--------------------------------------------------------
 	*/
-		PRINT '		3.PostDeployment.Updates.sql - START'
+		PRINT '		3.PostDeployment.Seed.sql - START'
 		GO
 
-		:r ..\ContinuousDeployment\3.PostDeployment.Updates.sql
+		:r ..\ContinuousDeployment\3.PostDeployment.Seed.sql
 		GO
 
-		PRINT '		3.PostDeployment.Updates.sql - END'
+		PRINT '		3.PostDeployment.Seed.sql - END'
+		GO
+
+	/*
+	--------------------------------------------------------
+	3.PostDeployment.Seed.sql - END
+	--------------------------------------------------------
+	*/
+
+	/*
+	--------------------------------------------------------
+	4.PostDeployment.Updates.sql - START
+	--------------------------------------------------------
+	*/
+		PRINT '		4.PostDeployment.Updates.sql - START'
+		GO
+
+		:r ..\ContinuousDeployment\4.PostDeployment.Updates.sql
+		GO
+
+		PRINT '		4.PostDeployment.Updates.sql - END'
 		GO
 	/*
 	--------------------------------------------------------
-	3.PostDeployment.Updates.sql - END
+	4.PostDeployment.Updates.sql - END
 	--------------------------------------------------------
 	*/
 

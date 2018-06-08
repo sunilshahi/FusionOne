@@ -74,7 +74,7 @@
     <None Include="PublishProfile\FusionOne.Database.publish.xml" />
     <None Include="ContinuousDeployment\1.PreDeployment.Updates.sql" />
     <None Include="ContinuousDeployment\2.PostDeployment.StaticTablesList.sql" />
-    <None Include="ContinuousDeployment\3.PostDeployment.Updates.sql" />
+    <None Include="ContinuousDeployment\4.PostDeployment.Updates.sql" />
     <None Include="ContinuousDeployment\Data\Static\AccountType.sql" />
     <None Include="ContinuousDeployment\Data\Seed\User.sql" />
   </ItemGroup>
@@ -97,6 +97,7 @@
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Scripts\Script.PostDeployment.sql" />
+    <None Include="ContinuousDeployment\3.PostDeployment.Seed.sql" />
   </ItemGroup>
   <ItemGroup>
     <PreDeploy Include="Scripts\Script.PreDeployment.sql" />
