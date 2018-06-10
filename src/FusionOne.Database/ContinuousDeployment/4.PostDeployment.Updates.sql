@@ -8,3 +8,17 @@ data after the schema update took place.
 Example invocation:
 EXEC sp_execute_script @sql = 'UPDATE Table....', @author = 'Your Name'
 */
+
+
+
+EXEC sp_execute_script 
+@sql = 
+'INSERT INTO [Account].[Account]
+           ([UserId]
+           ,[Balance]
+           ,[AccountTypeId])
+     VALUES
+           (1
+           ,200
+           ,1)', 
+@author = 'Sunil Shahi'

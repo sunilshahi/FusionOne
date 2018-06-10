@@ -10,4 +10,4 @@
 
 */
 
-:r .\Data\Static\AccountType.sql
+:r .\StaticTables\Account.AccountType.sql

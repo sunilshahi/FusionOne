@@ -23,6 +23,6 @@ END
 
 PRINT N'				Running seed script(s)...';
 
-:r .\Data\Seed\User.sql
+:r .\Seeds\dbo.User.sql
 
 SET NOEXEC OFF;

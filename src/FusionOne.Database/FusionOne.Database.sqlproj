@@ -59,15 +59,19 @@
     <Folder Include="Properties" />
     <Folder Include="PublishProfile\" />
     <Folder Include="ContinuousDeployment" />
-    <Folder Include="ContinuousDeployment\Security" />
     <Folder Include="Scripts" />
-    <Folder Include="ContinuousDeployment\Data" />
-    <Folder Include="ContinuousDeployment\Data\Static" />
-    <Folder Include="ContinuousDeployment\Data\Seed" />
     <Folder Include="ContinuousDeployment\Tables" />
-    <Folder Include="ContinuousDeployment\Views" />
-    <Folder Include="ContinuousDeployment\Programmability" />
-    <Folder Include="ContinuousDeployment\Programmability\Stored Procedures" />
+    <Folder Include="ContinuousDeployment\Seeds" />
+    <Folder Include="ContinuousDeployment\StaticTables" />
+    <Folder Include="Security" />
+    <Folder Include="ContinuousDeployment\Stored Procedures" />
+    <Folder Include="dbo" />
+    <Folder Include="dbo\Tables" />
+    <Folder Include="dbo\Stored Procedures" />
+    <Folder Include="dbo\Views" />
+    <Folder Include="Account" />
+    <Folder Include="Account\Tables" />
+    <Folder Include="Account\Views" />
   </ItemGroup>
   <ItemGroup>
     <None Include="PublishProfile\FusionOne.Database.production.publish.xml" />
@@ -75,8 +79,6 @@
     <None Include="ContinuousDeployment\1.PreDeployment.Updates.sql" />
     <None Include="ContinuousDeployment\2.PostDeployment.StaticTablesList.sql" />
     <None Include="ContinuousDeployment\4.PostDeployment.Updates.sql" />
-    <None Include="ContinuousDeployment\Data\Static\AccountType.sql" />
-    <None Include="ContinuousDeployment\Data\Seed\User.sql" />
   </ItemGroup>
   <ItemGroup>
     <SqlCmdVariable Include="Seed">
@@ -85,15 +87,18 @@
     </SqlCmdVariable>
   </ItemGroup>
   <ItemGroup>
-    <Build Include="ContinuousDeployment\Security\Schema.Account.sql" />
     <Build Include="ContinuousDeployment\Tables\__MigrationLog.sql" />
-    <Build Include="ContinuousDeployment\Tables\User.sql" />
-    <Build Include="ContinuousDeployment\Views\vwGetAllActiveUsers.sql" />
-    <Build Include="ContinuousDeployment\Tables\Account.sql" />
-    <Build Include="ContinuousDeployment\Views\vwAccountSummary.sql" />
-    <Build Include="ContinuousDeployment\Programmability\Stored Procedures\sp_execute_cd_script.sql" />
-    <Build Include="ContinuousDeployment\Programmability\Stored Procedures\sp_generate_merge.sql" />
-    <Build Include="ContinuousDeployment\Programmability\Stored Procedures\uspGetUserSummary.sql" />
+    <None Include="ContinuousDeployment\Seeds\dbo.User.sql" />
+    <None Include="ContinuousDeployment\StaticTables\Account.AccountType.sql" />
+    <Build Include="Security\Schema.Account.sql" />
+    <Build Include="ContinuousDeployment\Stored Procedures\sp_execute_cd_script.sql" />
+    <Build Include="ContinuousDeployment\Stored Procedures\sp_generate_merge.sql" />
+    <Build Include="dbo\Tables\User.sql" />
+    <Build Include="dbo\Stored Procedures\uspGetUserSummary.sql" />
+    <Build Include="dbo\Views\vwGetAllActiveUsers.sql" />
+    <Build Include="Account\Tables\AccountType.sql" />
+    <Build Include="Account\Tables\Account.sql" />
+    <Build Include="Account\Views\vwAccountSummary.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Scripts\Script.PostDeployment.sql" />
@@ -113,8 +118,5 @@
       <SuppressMissingDependenciesErrors>False</SuppressMissingDependenciesErrors>
       <DatabaseVariableLiteralValue>master</DatabaseVariableLiteralValue>
     </ArtifactReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Build Include="ContinuousDeployment\Tables\AccountType.sql" />
   </ItemGroup>
 </Project>
