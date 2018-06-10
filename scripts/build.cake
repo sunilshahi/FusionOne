@@ -19,8 +19,9 @@
 ////////////////////////////////////
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
-var connection = Argument("connection", "");
 var environment = ArgumentOrEnvironmentVariable("environment", "plexosoft_", "local");
+var connection = Argument("connection", "");
+var seed = Argument("seed", "");
 
 var dacpac = File($"./../src/FusionOne.Database/bin/{configuration}/FusionOne.Database.dacpac");
 var bacpac = File("./../publish/export/FusionOne.bacpac");
@@ -28,6 +29,16 @@ var bacpac = File("./../publish/export/FusionOne.bacpac");
 var environmentQualifier =  (environment == "local") ? string.Empty : $".{environment}";
 var publishProfile = File(
     $"./../src/FusionOne.Database/PublishProfile/FusionOne.Database{environmentQualifier}.publish.xml");
+
+
+var variables = new Dictionary<string, string>();
+
+if(!string.IsNullOrEmpty(seed)) 
+{
+    variables.Add("seed", 
+        (seed.Equals("true", StringComparison.CurrentCultureIgnoreCase) ? "true" : "false"));
+}
+
 
 ////////////////////////////////////
 // SETUP/TEAR DOWN
@@ -76,9 +87,10 @@ Task("Build")
 Task("CleanUp")
     .Does(() =>
     {
-        Information("Cleaning up publish folder.");
         EnsureDirectoryExists("./../publish");
         CleanDirectories(new List<string> {"./../publish"});
+        
+        Information("Cleaning up publish folder complete.");
     });
 
 Task("DeploymentReport")
@@ -93,9 +105,7 @@ Task("DeploymentReport")
             settings.SourceFile = dacpac;
             settings.Profile = publishProfile;
             settings.OutputPath = File("./../publish/scripts/DeploymentReport.xml");
-            // settings.Variables =  new Dictionary<string, string>{
-            //     {"Seed", "False"}
-            // };
+            settings.Variables = variables;
         }); 
 
         Information("DeploymentReport generation completed.");
@@ -111,9 +121,7 @@ Task("Script:Isolated")
             settings.SourceFile = dacpac;
             settings.Profile = publishProfile;
             settings.OutputPath = File("./../publish/scripts/FusionOne.sql");
-            // settings.Variables =  new Dictionary<string, string>{
-            //     {"Seed", "False"}
-            // };
+            settings.Variables = variables;
         });
 
         Information("Script generation completed.");
@@ -130,6 +138,7 @@ Task("Publish:Isolated")
         {
             settings.SourceFile = dacpac;
             settings.Profile = publishProfile;
+            settings.Variables = variables;
         });
 
         Information("Publish completed.");
